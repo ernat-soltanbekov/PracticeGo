@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASCII Art Generator</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <main class="page">
+        <section class="hero" aria-labelledby="hero-title">
+            <div class="hero-card">
+                <div class="eyebrow">ASCII Art Web</div>
+                <h1 id="hero-title" class="headline"><span>Stylize</span> text into a sharper, cleaner banner.</h1>
+                <p class="lead">
+                    Write a message, choose a banner style, and generate readable ASCII art with instant feedback.
+                    The interface keeps contrast high, actions obvious, and results easy to inspect on any screen size.
+                </p>
+
+                <div class="hero-stats" aria-label="Highlights">
+                    <div class="stat">
+                        <strong>Fast feedback</strong>
+                        <span>Clear success and error states after every submission.</span>
+                    </div>
+                    <div class="stat">
+                        <strong>Responsive layout</strong>
+                        <span>Adapts naturally from desktop to mobile without losing readability.</span>
+                    </div>
+                    <div class="stat">
+                        <strong>Accessible contrast</strong>
+                        <span>Text stays readable regardless of banner choice or viewport size.</span>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="hint-card" aria-labelledby="tips-title">
+                <div>
+                    <h2 id="tips-title">How to get good output</h2>
+                    <ul class="hint-list">
+                        <li>Use short lines first to check spacing before pasting long text.</li>
+                        <li>Try the banner cards to compare the visual style quickly.</li>
+                        <li>Copy the result with one click when you want to reuse the art elsewhere.</li>
+                    </ul>
+                </div>
+                <p class="footer-note">Tip: type <strong>\n</strong> if you want to control line breaks from a single field.</p>
+            </aside>
+        </section>
+
+        <section class="panel" aria-labelledby="form-title">
+            <form id="asciiForm" novalidate>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <div class="field-meta">
+                            <label for="text" id="form-title">Enter your text</label>
+                            <span id="charCount" aria-live="polite">0 characters</span>
+                        </div>
+                        <textarea id="text" name="text" placeholder="Type here. Use \n for line breaks or press Enter inside the box." required aria-describedby="text-help"></textarea>
+                        <div id="text-help" class="field-meta">
+                            <span>Supports multiline input and escape sequences.</span>
+                            <span>Output updates after submit.</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Select a banner style</label>
+                        <div class="banners" role="radiogroup" aria-label="Banner styles">
+                            <div class="banner-option">
+                                <input type="radio" id="standard" name="banner" value="standard" checked>
+                                <label for="standard">
+                                    <strong>Standard</strong>
+                                    <span>Balanced and highly readable.</span>
+                                </label>
+                            </div>
+                            <div class="banner-option">
+                                <input type="radio" id="shadow" name="banner" value="shadow">
+                                <label for="shadow">
+                                    <strong>Shadow</strong>
+                                    <span>Bold with a little extra depth.</span>
+                                </label>
+                            </div>
+                            <div class="banner-option">
+                                <input type="radio" id="thinkertoy" name="banner" value="thinkertoy">
+                                <label for="thinkertoy">
+                                    <strong>Thinkertoy</strong>
+                                    <span>Compact and playful for shorter messages.</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button id="generateButton" class="primary-button" type="submit">Generate ASCII Art</button>
+                    <button id="resetButton" class="secondary-button" type="button">Clear</button>
+                </div>
+            </form>
+
+            <div class="result-section">
+                <div id="message" class="status" role="status" aria-live="polite"></div>
+
+                <section class="result-card" aria-labelledby="result-title">
+                    <div class="result-toolbar">
+                        <div>
+                            <h2 id="result-title">Generated Output</h2>
+                            <p>Monospace rendering with horizontal scrolling for large banners.</p>
+                        </div>
+                        <div class="toolbar-actions">
+                            <button id="copyButton" class="secondary-button" type="button" disabled>Copy result</button>
+                        </div>
+                    </div>
+                    <pre id="result" class="result empty">Your ASCII art will appear here.</pre>
+                </section>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const textInput = document.getElementById('text');
+        const form = document.getElementById('asciiForm');
+        const messageDiv = document.getElementById('message');
+        const resultDiv = document.getElementById('result');
+        const generateButton = document.getElementById('generateButton');
+        const resetButton = document.getElementById('resetButton');
+        const copyButton = document.getElementById('copyButton');
+        const charCount = document.getElementById('charCount');
+
+        function processEscapeSequences(str) {
+            return str
+                .replace(/\\n/g, '\n')
+                .replace(/\\t/g, '\t')
+                .replace(/\\r/g, '\r')
+                .replace(/\\\\/g, '\\');
+        }
+
+        function setStatus(type, text) {
+            if (!text) {
+                messageDiv.innerHTML = '';
+                messageDiv.removeAttribute('class');
+                messageDiv.className = 'status';
+                return;
+            }
+
+            messageDiv.className = `status message ${type}`;
+            messageDiv.textContent = text;
+        }
+
+        function setEmptyResult(text) {
+            resultDiv.textContent = text;
+            resultDiv.classList.add('empty');
+            copyButton.disabled = true;
+        }
+
+        function setWorkingState(isWorking) {
+            generateButton.disabled = isWorking;
+            resetButton.disabled = isWorking;
+            generateButton.textContent = isWorking ? 'Generating...' : 'Generate ASCII Art';
+            form.setAttribute('aria-busy', String(isWorking));
+        }
+
+        function updateCharacterCount() {
+            charCount.textContent = `${textInput.value.length} character${textInput.value.length === 1 ? '' : 's'}`;
+        }
+
+        async function copyResult() {
+            try {
+                await navigator.clipboard.writeText(resultDiv.textContent);
+                setStatus('success', 'ASCII art copied to the clipboard.');
+            } catch (error) {
+                setStatus('error', 'Copy failed. Select the output and copy it manually.');
+            }
+        }
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            let text = processEscapeSequences(textInput.value);
+            const banner = document.querySelector('input[name="banner"]:checked').value;
+
+            setStatus('', '');
+
+            if (!text.trim()) {
+                setStatus('error', 'Please enter some text before generating ASCII art.');
+                setEmptyResult('Your ASCII art will appear here.');
+                return;
+            }
+
+            setWorkingState(true);
+
+            try {
+                const formData = new FormData();
+                formData.append('text', text);
+                formData.append('banner', banner);
+
+                const response = await fetch('/ascii-art', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    const result = await response.text();
+                    resultDiv.textContent = result;
+                    resultDiv.classList.remove('empty');
+                    copyButton.disabled = false;
+                    setStatus('success', 'ASCII art generated successfully.');
+                    resultDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } else if (response.status === 400) {
+                    const errorText = await response.text();
+                    setStatus('error', errorText || 'Bad request: check your text and banner selection.');
+                    setEmptyResult('Your ASCII art will appear here.');
+                } else if (response.status === 404) {
+                    setStatus('error', 'Banner not found. Please try another style.');
+                    setEmptyResult('Your ASCII art will appear here.');
+                } else if (response.status === 500) {
+                    setStatus('error', 'Server error: please try again in a moment.');
+                    setEmptyResult('Your ASCII art will appear here.');
+                } else {
+                    setStatus('error', 'Unexpected response from the server.');
+                    setEmptyResult('Your ASCII art will appear here.');
+                }
+            } catch (error) {
+                setStatus('error', `Network error: ${error.message}`);
+                setEmptyResult('Your ASCII art will appear here.');
+            } finally {
+                setWorkingState(false);
+            }
+        });
+
+        textInput.addEventListener('input', updateCharacterCount);
+
+        resetButton.addEventListener('click', () => {
+            form.reset();
+            setStatus('', '');
+            textInput.value = '';
+            updateCharacterCount();
+            setEmptyResult('Your ASCII art will appear here.');
+            textInput.focus();
+        });
+
+        copyButton.addEventListener('click', copyResult);
+
+        updateCharacterCount();
+    </script>
+</body>
+</html>
