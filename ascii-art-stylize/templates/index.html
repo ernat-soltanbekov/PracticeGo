@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- Этот тег делает сайт адаптивным (responsive) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}}</title>
+    <!-- Подключение нашего CSS файла -->
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>{{.Title}}</h1>
+        <form action="/ascii-art" method="POST">
+            <textarea name="text" placeholder="Введите текст..."></textarea>
+            <button type="submit">Сгенерировать</button>
+        </form>
+        <pre class="result-box">{{.Result}}</pre>
+    </div>
+</body>
+</html>
