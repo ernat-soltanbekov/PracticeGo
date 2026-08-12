@@ -2,17 +2,17 @@ package main
 
 import "fmt"
 
-func Fibonacci(index int) int {
-	if index == 0 {
+func Fibonacci(index int) int { // Главная функция: получаем номер элемента последовательности и возвращаем его значение.
+	if index == 0 { // Базовый случай: первый элемент последовательности Фибоначчи равен 0.
 		return 0
 	}
-	if index == 1 {
+	if index == 1 { // Базовый случай: второй элемент последовательности Фибоначчи равен 1.
 		return 1
 	}
-	result := Fibonacci(index-2) + Fibonacci(index-1)
-	return result
+	result := Fibonacci(index-2) + Fibonacci(index-1) // Рекурсивно получаем два предыдущих значения и складываем их.
+	return result                                     // Возвращаем вычисленное значение текущего элемента.
 }
 
-func main() {
-	fmt.Println(Fibonacci(7))
+func main() { // Точка входа в программу.
+	fmt.Println(Fibonacci(7)) // Вызываем функцию для элемента с индексом 7 и выводим полученный результат.
 }
