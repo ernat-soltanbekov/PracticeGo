@@ -7,7 +7,7 @@ func NewtonThird(force float64) float64 {
 }
 
 func main() {
-	action := 2000.0
+	action := 1000.0
 	reaction := NewtonThird(action)
 
 	fmt.Println("Action:", action, "N")
